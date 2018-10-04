@@ -1,6 +1,6 @@
 # Introduction
 
-Python scripts for helping text processing. The motivation was that I have the typical scenario for several python scripts:
+Python scripts for helping text processing. I usually have the typical scenario for several python scripts used for text processing:
 
 1. Process some input text and produce some output text (eg.: parse an article from html) 
     -> these are processors reading standard in and printing result to standard out
