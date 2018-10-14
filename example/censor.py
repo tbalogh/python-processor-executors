@@ -11,7 +11,7 @@ def error(message, ex):
     raise ex
 
 def read_config(config_param):
-    if config_param is dict:
+    if type(config_param) is dict:
         if 'censored_words' in config_param.keys():
             return config_param
         else:
