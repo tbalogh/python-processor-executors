@@ -1,1 +1,0 @@
-ERROR;FAILED;./input/comedy.txt	stat: path should be string, bytes, os.PathLike or integer, not dict

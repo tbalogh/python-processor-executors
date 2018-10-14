@@ -1,2 +1,0 @@
-ERROR;FAILED;./input/western.txt	stat: path should be string, bytes, os.PathLike or integer, not dict
-ERROR;FAILED;./input/drama.txt	stat: path should be string, bytes, os.PathLike or integer, not dict
