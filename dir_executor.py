@@ -1,11 +1,20 @@
-import os, argparse
+import sys, os, argparse
 import importlib.util
 from files_executor import execute_parallel as execute_with_files
 
 
+def load_module(path):
+    sys.path.append(os.path.dirname(path))
+    spec = importlib.util.spec_from_file_location("module", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
 def validate_args(args):
     assert (os.path.isdir(args.input_dir))
     assert (os.path.isfile(args.processor))
+    if args.input_filter is not None:
+        assert (os.path.isfile(args.input_filter))
 
 
 def parse_args():
@@ -20,11 +29,13 @@ def parse_args():
     required.add_argument("-p", "--processor", required=True, help="The processor python script file")
     required.add_argument("-c", "--processor_config",
                           help="The configuration file or str (json format) that interpreted by processors")
+    required.add_argument("-if", "--input_filter",
+                          help="Filter script path that can filter the processable documents")
 
     args = parser.parse_args()
     validate_args(args)
 
-    return args.input_dir, args.input_extension, args.output_dir, args.output_extension, args.processor, args.processor_config
+    return args.input_dir, args.input_extension, args.output_dir, args.output_extension, args.processor, args.processor_config, args.input_filter
 
 
 def files_ends_with_filter(ends_with):
@@ -72,7 +83,10 @@ def generate_input_output_pairs(input_files, output_dir, output_extension):
 
 
 if __name__ == '__main__':
-    (input_dir, input_extension, output_dir, output_extension, processor, processor_config) = parse_args()
+    (input_dir, input_extension, output_dir, output_extension, processor, processor_config, input_filter_path) = parse_args()
     input_files = list(files_ends_with(input_dir, input_extension))
+    if input_filter_path is not None:
+        input_filter = load_module(input_filter_path)
+        input_files = input_filter.filter(input_files)
     list_of_input_output_tuples = generate_input_output_pairs(input_files, output_dir, output_extension)
     execute_with_files(list_of_input_output_tuples, processor, processor_config)
