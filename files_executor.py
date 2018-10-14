@@ -22,7 +22,6 @@ def validate_arguments(args):
     for input_output_pair in args.input_output_pairs:
         (input_file, output_file) = parse_input_output_pair(input_output_pair)
         assert (os.path.isfile(input_file))
-        assert (not os.path.isfile(output_file))
     assert (os.path.isfile(args.processor))
 
 def parse_args():
@@ -102,7 +101,7 @@ def read_config(processor_config):
             exit('Processor config can not be loaded: ' + processor_config +
                 "\n Please validate that the file (or the string parameter) and the its json format is valid. The config file format is described in the Readme.md")
     else:
-        return json.loads('{"configs": [ {} ]}')
+        return json.loads('{"configs": [ {} ]}')['configs']
         
 def execute_parallel(input_output_pairs, processor_file, processor_config_param=None):
     configs = read_config(processor_config_param)
