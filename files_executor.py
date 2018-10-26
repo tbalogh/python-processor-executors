@@ -106,12 +106,21 @@ def read_config(processor_config):
 def execute_parallel(input_output_pairs, processor_file, processor_config_param=None):
     configs = read_config(processor_config_param)
     n_parallel = len(configs) if configs is not None else 1
+
+    print(configs)
+    if (n_parallel == 1):
+        for i in range(1, 100):
+            configs.append(configs[0])
+    n_parallel = len(configs)
+    print(configs)
+
     chunks = chunk_list(input_output_pairs, n_parallel)
     list_of_params = []
     for i in range(n_parallel):
-        list_of_params.append((chunks[i], processor_file, configs[i]))
-    pool = Pool()
-    pool.starmap(execute, list_of_params)
+        execute(chunks[i], processor_file, configs[i])
+        # list_of_params.append((chunks[i], processor_file, configs[i]))
+    # pool = Pool()
+    # pool.starmap(execute, list_of_params)
 
 
 if __name__ == '__main__':

@@ -85,8 +85,10 @@ def generate_input_output_pairs(input_files, output_dir, output_extension):
 if __name__ == '__main__':
     (input_dir, input_extension, output_dir, output_extension, processor, processor_config, input_filter_path) = parse_args()
     input_files = list(files_ends_with(input_dir, input_extension))
+    all_count = len(input_files)
     if input_filter_path is not None:
         input_filter = load_module(input_filter_path)
-        input_files = input_filter.filter(input_files)
+        input_files = input_filter.process(input_files)
+        filtered_count = len(input_files)
     list_of_input_output_tuples = generate_input_output_pairs(input_files, output_dir, output_extension)
     execute_with_files(list_of_input_output_tuples, processor, processor_config)
