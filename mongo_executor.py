@@ -5,6 +5,7 @@ import json
 from bson import json_util
 from pymongo import MongoClient
 import pandas as pd
+from time import sleep
 
 
 
@@ -44,17 +45,15 @@ def load_config(config_param):
         exit('Processor config can not be loaded: ' + config_param +
             "\n Please validate that the file (or the string parameter) and the its json format is valid.")
     
-client1 = MongoClient()
-db1 = client1['tbalogh']
-model_collection = db1['origo_author_fix']
-client2 = MongoClient()
-db2 = client1['tbalogh']
-morph_collection = db2['articles']
+read_client = MongoClient()
+model_collection = read_client['tbalogh']['article_models']
+write_client = MongoClient()
+morph_collection = write_client['tbalogh']['articles']
 
 def get_moprh_ids(portal, start, end):
     morphs = morph_collection.find( \
         { \
-            'portal':portal, \
+            'portal':portal, 'category': 'itthon',\
             'published_time': { "$gte": start, "$lt": end } \
         }, \
         { \
@@ -80,19 +79,21 @@ def get_models_by_filter_ids(portal, start, end, ids, limit):
         { \
             'portal':portal, \
             'published_time': { "$gte": start, "$lt": end }, \
-            'id': {"$nin":ids}
+            'id': {"$nin":ids} \
         }
     ).limit(limit)
     return list(models)
 
 def get_model_by_filter_ids(portal, start, end, ids):
-    model = model_collection.find_one( \
-        { \
-            'portal':portal, \
+    print(len(ids))
+    # exit()
+    model = model_collection.find_one(\
+            { \
+            'portal':portal, 'category': 'itthon',\
             'published_time': { "$gte": start, "$lt": end }, \
-            'id': {"$nin":ids}
-        }
-    )
+            'id': {"$nin":ids} \
+            }
+        )
     return model
 
 
@@ -100,27 +101,41 @@ def execute(processor_file, config_param):
     processor_module = load_module(processor_file)
     config = load_config(config_param)
     portal = config['portal']
-    start = datetime(2014, 1, 1)
-    end = datetime(2014, 1, 5)
+    start = datetime(2016, 1, 1)
+    end = datetime(2016, 7, 1)
 
     # get already processed ids
     morphs = get_moprh_ids(portal, start, end)
     morphs_df = pd.DataFrame(morphs)
-    morph_ids = morphs_df['id'].tolist()
+    if len(morphs_df.index) == 0:
+        morph_ids = []
+    else:
+        morph_ids = morphs_df['id'].tolist()
 
     # get not processed articles
-    while(True): 
+    for i in range(3000): 
         model = get_model_by_filter_ids(portal, start, end, morph_ids)
+        print(model)
+        # print('model queried: ' + str(model['id']))
         if model is None:
             print("Finished")
             exit()
+        exit("hi")
         text = json.dumps(model, default=json_util.default)
-        result = processor_module.process(text, config)
+        try:
+            # print('started morph: ' + str(model['id']))
+            result = processor_module.process(text, config)
+            # print('morph finished: ' + str(model['id']))
+        except:
+            print("AJAJ: " + str(model['id']))
+            morph_ids.append(model['id'])
+            continue
         morph = json.loads(result,object_hook=json_util.object_hook)
-        print('Processed: ' + str(morph['id']))
+        # print('Processed: ' + str(morph['id']))
         morph_ids.append(morph['id'])
         morph_collection.insert_one(morph)
-
+        print(str(i) + " inserted: " + morph['id'])
+    sleep(2 * 60)
 
 if __name__ == '__main__':
     (processor_file, processor_config) = parse_args()

@@ -96,7 +96,8 @@ def read_config(processor_config):
                 with open(processor_config, "r") as f:
                     return json.load(f)['configs']
             else:
-                    return json.loads(processor_config)['configs']
+                print(processor_config)
+                return json.loads(processor_config)['configs']
         except:
             exit('Processor config can not be loaded: ' + processor_config +
                 "\n Please validate that the file (or the string parameter) and the its json format is valid. The config file format is described in the Readme.md")
@@ -109,18 +110,18 @@ def execute_parallel(input_output_pairs, processor_file, processor_config_param=
 
     print(configs)
     if (n_parallel == 1):
-        for i in range(1, 100):
+        for i in range(1, 4):
             configs.append(configs[0])
     n_parallel = len(configs)
-    print(configs)
+    # print(configs)
 
     chunks = chunk_list(input_output_pairs, n_parallel)
     list_of_params = []
     for i in range(n_parallel):
-        execute(chunks[i], processor_file, configs[i])
-        # list_of_params.append((chunks[i], processor_file, configs[i]))
-    # pool = Pool()
-    # pool.starmap(execute, list_of_params)
+        # execute(chunks[i], processor_file, configs[i])
+        list_of_params.append((chunks[i], processor_file, configs[i]))
+    pool = Pool()
+    pool.starmap(execute, list_of_params)
 
 
 if __name__ == '__main__':
